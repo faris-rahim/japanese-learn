@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Japanese Learning Tracker</title>
+    <link rel="stylesheet" href="japanese-learning.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🇯🇵 Japanese Learning Tracker</h1>
+            <p class="subtitle">Master Hiragana, Katakana, Kanji & Vocabulary</p>
+        </header>
+
+        <div class="main-content">
+            <div class="tabs">
+                <button class="tab-btn active" onclick="switchTab('dashboard')">📊 Dashboard</button>
+                <button class="tab-btn" onclick="switchTab('hiragana')">あ Hiragana Quiz</button>
+                <button class="tab-btn" onclick="switchTab('katakana')">ア Katakana Quiz</button>
+                <button class="tab-btn" onclick="switchTab('vocabulary')">📚 Vocabulary Quiz</button>
+                <button class="tab-btn" onclick="switchTab('study')">📖 Study Guide</button>
+                <button class="tab-btn" onclick="switchTab('settings')">⚙️ Settings</button>
+            </div>
+
+            <!-- Dashboard Tab -->
+            <div id="dashboard" class="tab-content active">
+                <h2 style="margin-bottom: 20px; color: #333;">Your Progress</h2>
+                <div class="progress-section">
+                    <div class="progress-item">
+                        <div class="progress-label">
+                            <span>Hiragana Mastery</span>
+                            <span id="hiragana-percentage">0%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="hiragana-progress" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <div class="progress-item">
+                        <div class="progress-label">
+                            <span>Katakana Mastery</span>
+                            <span id="katakana-percentage">0%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="katakana-progress" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <div class="progress-item">
+                        <div class="progress-label">
+                            <span>Vocabulary Progress</span>
+                            <span id="vocabulary-percentage">0%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="vocabulary-progress" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">Total Questions</div>
+                        <div class="stat-value" id="total-questions">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Correct Answers</div>
+                        <div class="stat-value" id="total-correct">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Accuracy Rate</div>
+                        <div class="stat-value" id="accuracy-rate">0%</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Study Streak</div>
+                        <div class="stat-value" id="study-streak">0</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hiragana Quiz Tab -->
+            <div id="hiragana" class="tab-content">
+                <div class="quiz-section">
+                    <h2 style="margin-bottom: 20px; color: #333;">Hiragana Quiz</h2>
+                    <div class="score-display">
+                        Score: <span id="hiragana-score">0</span> / <span id="hiragana-total">0</span>
+                    </div>
+                    <div class="quiz-card" id="hiragana-quiz-card">
+                        <div class="japanese-text" id="hiragana-question">あ</div>
+                        <div class="options" id="hiragana-options"></div>
+                    </div>
+                    <div id="hiragana-feedback" class="feedback" style="display: none;"></div>
+                    <button class="btn" onclick="startQuiz('hiragana')">Start Quiz</button>
+                    <button class="btn" onclick="nextQuestion('hiragana')" id="hiragana-next" style="display: none;">Next Question</button>
+                </div>
+            </div>
+
+            <!-- Katakana Quiz Tab -->
+            <div id="katakana" class="tab-content">
+                <div class="quiz-section">
+                    <h2 style="margin-bottom: 20px; color: #333;">Katakana Quiz</h2>
+                    <div class="score-display">
+                        Score: <span id="katakana-score">0</span> / <span id="katakana-total">0</span>
+                    </div>
+                    <div class="quiz-card" id="katakana-quiz-card">
+                        <div class="japanese-text" id="katakana-question">ア</div>
+                        <div class="options" id="katakana-options"></div>
+                    </div>
+                    <div id="katakana-feedback" class="feedback" style="display: none;"></div>
+                    <button class="btn" onclick="startQuiz('katakana')">Start Quiz</button>
+                    <button class="btn" onclick="nextQuestion('katakana')" id="katakana-next" style="display: none;">Next Question</button>
+                </div>
+            </div>
+
+            <!-- Vocabulary Quiz Tab -->
+            <div id="vocabulary" class="tab-content">
+                <div class="quiz-section">
+                    <h2 style="margin-bottom: 20px; color: #333;">Vocabulary Quiz</h2>
+                    <div class="score-display">
+                        Score: <span id="vocabulary-score">0</span> / <span id="vocabulary-total">0</span>
+                    </div>
+                    <div class="quiz-card" id="vocabulary-quiz-card">
+                        <div class="japanese-text" id="vocabulary-question">こんにちは</div>
+                        <div class="options" id="vocabulary-options"></div>
+                    </div>
+                    <div id="vocabulary-feedback" class="feedback" style="display: none;"></div>
+                    <button class="btn" onclick="startQuiz('vocabulary')">Start Quiz</button>
+                    <button class="btn" onclick="nextQuestion('vocabulary')" id="vocabulary-next" style="display: none;">Next Question</button>
+                </div>
+            </div>
+
+            <!-- Study Guide Tab -->
+            <div id="study" class="tab-content">
+                <h2 style="margin-bottom: 20px; color: #333;">Study Guide</h2>
+                
+                <h3 style="margin: 20px 0; color: #667eea;">Hiragana Characters</h3>
+                <div class="study-list" id="hiragana-study"></div>
+
+                <h3 style="margin: 20px 0; color: #667eea;">Katakana Characters</h3>
+                <div class="study-list" id="katakana-study"></div>
+
+                <h3 style="margin: 20px 0; color: #667eea;">Common Vocabulary</h3>
+                <div class="study-list" id="vocabulary-study"></div>
+            </div>
+
+            <!-- Settings Tab -->
+            <div id="settings" class="tab-content">
+                <h2 style="margin-bottom: 20px; color: #333;">Settings</h2>
+                <div class="settings-section">
+                    <div class="setting-item">
+                        <label class="setting-label">Questions Per Quiz</label>
+                        <input type="number" id="questions-per-quiz" min="5" max="50" value="10" onchange="saveSettings()">
+                    </div>
+                    <div class="setting-item">
+                        <label class="setting-label">Difficulty Level</label>
+                        <select id="difficulty-level" onchange="saveSettings()">
+                            <option value="beginner">Beginner</option>
+                            <option value="intermediate">Intermediate</option>
+                            <option value="advanced">Advanced</option>
+                        </select>
+                    </div>
+                    <div class="setting-item">
+                        <label class="setting-label">Study Goal (minutes per day)</label>
+                        <input type="number" id="study-goal" min="5" max="180" value="20" onchange="saveSettings()">
+                    </div>
+                    <button class="btn reset-btn" onclick="resetProgress()">Reset All Progress</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="japanese-learning.js"></script>
+</body>
+</html>
