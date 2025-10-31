@@ -92,10 +92,33 @@ let settings = {
     studyGoal: 20
 };
 
+// Current user ID (can be email, UUID, or anonymous ID)
+let currentUserId = null;
+
 // Initialize app
-function init() {
-    loadProgress();
-    loadSettings();
+async function init() {
+    // Check if user is authenticated
+    if (supabase) {
+        const user = await db.getCurrentUser();
+        if (user) {
+            currentUserId = user.id;
+            console.log('Logged in user:', user.email);
+        } else {
+            // Use anonymous ID stored in localStorage
+            currentUserId = localStorage.getItem('anonymousUserId');
+            if (!currentUserId) {
+                currentUserId = 'anon_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+                localStorage.setItem('anonymousUserId', currentUserId);
+            }
+            console.log('Using anonymous mode');
+        }
+    } else {
+        // Fallback to localStorage-only mode
+        console.warn('Supabase not available, using localStorage only');
+    }
+    
+    await loadProgress();
+    await loadSettings();
     updateDashboard();
     populateStudyGuide();
 }
@@ -233,7 +256,7 @@ function nextQuestion(type) {
     showQuestion(type);
 }
 
-function endQuiz(type) {
+async function endQuiz(type) {
     const feedback = document.getElementById(`${type}-feedback`);
     feedback.style.display = 'block';
     feedback.className = 'feedback correct';
@@ -246,6 +269,15 @@ function endQuiz(type) {
     document.getElementById(`${type}-options`).innerHTML = '';
     document.getElementById(`${type}-question`).textContent = '✓';
     document.getElementById(`${type}-next`).style.display = 'none';
+    
+    // Log quiz session to Supabase
+    if (supabase && currentUserId) {
+        await db.logQuizSession(currentUserId, {
+            type: type,
+            score: currentQuiz.score,
+            total: currentQuiz.total
+        });
+    }
 }
 
 // Progress and dashboard
@@ -336,25 +368,50 @@ function populateStudyGuide() {
 }
 
 // Settings
-function saveSettings() {
+async function saveSettings() {
     settings.questionsPerQuiz = parseInt(document.getElementById('questions-per-quiz').value);
     settings.difficulty = document.getElementById('difficulty-level').value;
     settings.studyGoal = parseInt(document.getElementById('study-goal').value);
     
+    // Save to localStorage as backup
     localStorage.setItem('japaneseSettings', JSON.stringify(settings));
-}
-
-function loadSettings() {
-    const saved = localStorage.getItem('japaneseSettings');
-    if (saved) {
-        settings = JSON.parse(saved);
-        document.getElementById('questions-per-quiz').value = settings.questionsPerQuiz;
-        document.getElementById('difficulty-level').value = settings.difficulty;
-        document.getElementById('study-goal').value = settings.studyGoal;
+    
+    // Save to Supabase if available
+    if (supabase && currentUserId) {
+        await db.saveSettings(currentUserId, settings);
     }
 }
 
-function resetProgress() {
+async function loadSettings() {
+    // Try loading from Supabase first
+    if (supabase && currentUserId) {
+        const savedSettings = await db.getSettings(currentUserId);
+        if (savedSettings) {
+            settings.questionsPerQuiz = savedSettings.questions_per_quiz;
+            settings.difficulty = savedSettings.difficulty;
+            settings.studyGoal = savedSettings.study_goal;
+        } else {
+            // Fall back to localStorage
+            const localSaved = localStorage.getItem('japaneseSettings');
+            if (localSaved) {
+                settings = JSON.parse(localSaved);
+            }
+        }
+    } else {
+        // Use localStorage only
+        const saved = localStorage.getItem('japaneseSettings');
+        if (saved) {
+            settings = JSON.parse(saved);
+        }
+    }
+    
+    // Update UI
+    document.getElementById('questions-per-quiz').value = settings.questionsPerQuiz;
+    document.getElementById('difficulty-level').value = settings.difficulty;
+    document.getElementById('study-goal').value = settings.studyGoal;
+}
+
+async function resetProgress() {
     if (confirm('Are you sure you want to reset all your progress? This cannot be undone.')) {
         progress = {
             hiragana: { correct: 0, total: 0 },
@@ -365,21 +422,59 @@ function resetProgress() {
             streak: 0,
             lastStudyDate: null
         };
-        saveProgress();
+        await saveProgress();
         updateDashboard();
         alert('Progress has been reset!');
     }
 }
 
 // Storage
-function saveProgress() {
+async function saveProgress() {
+    // Save to localStorage as backup
     localStorage.setItem('japaneseProgress', JSON.stringify(progress));
+    
+    // Save to Supabase if available
+    if (supabase && currentUserId) {
+        await db.saveProgress(currentUserId, progress);
+    }
 }
 
-function loadProgress() {
-    const saved = localStorage.getItem('japaneseProgress');
-    if (saved) {
-        progress = JSON.parse(saved);
+async function loadProgress() {
+    // Try loading from Supabase first
+    if (supabase && currentUserId) {
+        const savedProgress = await db.getProgress(currentUserId);
+        if (savedProgress) {
+            progress = {
+                hiragana: {
+                    correct: savedProgress.hiragana_correct || 0,
+                    total: savedProgress.hiragana_total || 0
+                },
+                katakana: {
+                    correct: savedProgress.katakana_correct || 0,
+                    total: savedProgress.katakana_total || 0
+                },
+                vocabulary: {
+                    correct: savedProgress.vocabulary_correct || 0,
+                    total: savedProgress.vocabulary_total || 0
+                },
+                totalQuestions: savedProgress.total_questions || 0,
+                totalCorrect: savedProgress.total_correct || 0,
+                streak: savedProgress.streak || 0,
+                lastStudyDate: savedProgress.last_study_date
+            };
+        } else {
+            // Fall back to localStorage
+            const localSaved = localStorage.getItem('japaneseProgress');
+            if (localSaved) {
+                progress = JSON.parse(localSaved);
+            }
+        }
+    } else {
+        // Use localStorage only
+        const saved = localStorage.getItem('japaneseProgress');
+        if (saved) {
+            progress = JSON.parse(saved);
+        }
     }
 }
 

@@ -14,3 +14,8 @@ Desktop.ini
 *.swo
 *~
 
+# Environment and config files with sensitive data
+supabase-config.js
+.env
+.env.local
+
